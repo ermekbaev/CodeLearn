@@ -12,6 +12,8 @@ import {
   ArrowRight, 
   CheckSquare 
 } from 'lucide-react';
+import Header from '@/app/components/Header';
+import ProtectedRoute from '@/app/components/ProtectedRoute';
 import AnimatedDiv from '@/app/components/AnimatedDiv';
 
 export default function LessonPage({ 
@@ -30,11 +32,11 @@ export default function LessonPage({
   useEffect(() => {
     const fetchLessonData = async () => {
       try {
-        // В реальном приложении заменить на запрос к API
+        // Запрос данных урока
         const lessonResponse = await axios.get(`/api/lessons/${lessonId}`);
         setLesson(lessonResponse.data);
         
-        // Получаем данные о курсе
+        // Запрос данных курса
         const courseResponse = await axios.get(`/api/courses/${courseId}`);
         setCourse(courseResponse.data);
         
@@ -42,17 +44,8 @@ export default function LessonPage({
       } catch (err) {
         console.error('Ошибка при загрузке урока:', err);
         setError('Не удалось загрузить данные урока. Пожалуйста, попробуйте позже.');
-        setLoading(false);
-      }
-    };
-
-    // Для демонстрации используем моковые данные
-    const mockData = async () => {
-      try {
-        // Имитируем задержку сети
-        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Примеры данных
+        // Загружаем моковые данные для демонстрации
         const mockCourse = {
           id: courseId,
           title: 'JavaScript основы',
@@ -123,33 +116,26 @@ let colors = ["red", "green", "blue"]; // Array
         setCourse(mockCourse);
         setLesson(mockLesson);
         setLoading(false);
-      } catch (err) {
-        console.error('Ошибка при загрузке моковых данных:', err);
-        setError('Произошла ошибка при загрузке данных.');
-        setLoading(false);
       }
     };
     
-    // Используем моковые данные для демонстрации
-    mockData();
-    // В продакшене будет:
-    // fetchLessonData();
+    fetchLessonData();
   }, [courseId, lessonId]);
   
-  // Функция для рендера markdown (улучшенная версия)
-  const renderMarkdown = (content:any) => {
+  // Функция для рендера markdown
+  const renderMarkdown = (content:string) => {
     if (!content) return null;
     
     const parts = content.split('```');
     
     return (
       <div>
-        {parts.map((part:any, index:any) => {
+        {parts.map((part, index) => {
           if (index % 2 === 0) {
             // Обычный текст (не код)
             return (
               <div key={index} className="prose prose-indigo dark:prose-invert max-w-none">
-                {part.split('\n').map((line:any, lineIndex:any) => {
+                {part.split('\n').map((line, lineIndex) => {
                   if (line.startsWith('## ')) {
                     return <h2 key={lineIndex} className="text-2xl font-bold mt-8 mb-4 text-gray-800 dark:text-white">{line.replace('## ', '')}</h2>;
                   } else if (line.startsWith('### ')) {
@@ -179,7 +165,7 @@ let colors = ["red", "green", "blue"]; // Array
                     const segments = line.split('`');
                     return (
                       <p key={lineIndex} className="mb-3 text-gray-700 dark:text-gray-300">
-                        {segments.map((segment:any, segIndex:any) => {
+                        {segments.map((segment, segIndex) => {
                           return segIndex % 2 === 0 ? 
                             segment : 
                             <code key={segIndex} className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono text-sm">
@@ -239,14 +225,14 @@ let colors = ["red", "green", "blue"]; // Array
   
   const handleCompleteLesson = async () => {
     try {
-      // Здесь должен быть запрос к API для отметки урока как завершенного
+      // Здесь будет запрос к API для отметки урока как завершенного
       await axios.post('/api/progress', { 
         lessonId: lesson.id, 
         completed: true 
       });
       
       if (lesson.hasQuiz) {
-        // Если у урока есть квиз, перенаправляем на страницу квиза
+        // Если у урока есть квиз, перенаправляем на его страницу
         router.push(`/courses/${courseId}/lessons/${lessonId}/quiz`);
       } else if (lesson.nextLessonId) {
         // Иначе перенаправляем на следующий урок, если он есть
@@ -261,185 +247,183 @@ let colors = ["red", "green", "blue"]; // Array
     }
   };
   
-  // Для состояния загрузки показываем спиннер
-  if (loading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="flex flex-1 justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-        </div>
-      </div>
-    );
-  }
-  
-  // При ошибке показываем сообщение
-  if (error) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-2">Ошибка</h2>
-            <p>{error}</p>
-            <button 
-              onClick={() => router.push(`/courses/${courseId}`)}
-              className="mt-4 inline-flex items-center text-red-700 dark:text-red-300"
-            >
-              <ArrowLeft size={16} className="mr-2" />
-              Вернуться к курсу
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <main className="flex-1 overflow-auto">
-        <div className="container mx-auto px-4 py-6">
-          <AnimatedDiv>
-            <div className="flex items-center space-x-2 mb-6">
-              <button 
-                onClick={() => router.push(`/courses/${courseId}`)}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center"
-              >
-                <ArrowLeft size={18} className="mr-1" />
-                К списку курсов
-              </button>
-              <span className="text-gray-400">/</span>
-              <span className="text-gray-700 dark:text-gray-300">{course?.title}</span>
-              <span className="text-gray-400">/</span>
-              <span className="text-gray-900 dark:text-white font-medium">Урок {lesson?.order}</span>
-            </div>
-          </AnimatedDiv>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-3">
-              <AnimatedDiv className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg mr-4">
-                    <FileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{lesson?.title}</h1>
-                </div>
-                
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <Clock size={16} className="mr-1 text-indigo-500" />
-                    <span>{lesson?.duration}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                    <Coffee size={16} className="mr-1 text-indigo-500" />
-                    <span>{lesson?.level}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 border-t border-gray-100 dark:border-gray-700 pt-6">
-                  {lesson && renderMarkdown(lesson.content)}
-                </div>
-                
-                <div className="flex justify-between mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <button 
-                    className={`text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center ${!lesson?.prevLessonId && 'opacity-50 cursor-not-allowed'}`}
-                    onClick={() => lesson?.prevLessonId && router.push(`/courses/${courseId}/lessons/${lesson.prevLessonId}`)}
-                    disabled={!lesson?.prevLessonId}
-                  >
-                    <ArrowLeft size={16} className="mr-2" />
-                    Предыдущий урок
-                  </button>
-                  
-                  <button 
-                    onClick={handleCompleteLesson}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 px-6 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center"
-                  >
-                    {lesson?.hasQuiz ? 'Пройти тест' : (lesson?.nextLessonId ? 'Следующий урок' : 'Завершить курс')}
-                    <ArrowRight size={16} className="ml-2" />
-                  </button>
-                </div>
-              </AnimatedDiv>
-            </div>
+    <ProtectedRoute>
+      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+        <Header />
+        
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto px-4 py-6">
+            <AnimatedDiv>
+              <div className="flex items-center space-x-2 mb-6">
+                <button 
+                  onClick={() => router.push(`/courses/${courseId}`)}
+                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center"
+                >
+                  <ArrowLeft size={18} className="mr-1" />
+                  К списку курсов
+                </button>
+                <span className="text-gray-400">/</span>
+                <span className="text-gray-700 dark:text-gray-300">{course?.title}</span>
+                <span className="text-gray-400">/</span>
+                <span className="text-gray-900 dark:text-white font-medium">Урок {lesson?.order}</span>
+              </div>
+            </AnimatedDiv>
             
-            <div className="md:col-span-1">
-              <AnimatedDiv delay={200} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 sticky top-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-gray-800 dark:text-white">Навигация по уроку</h3>
-                  <button 
-                    onClick={() => setShowResources(!showResources)}
-                    className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline"
-                  >
-                    {showResources ? 'Скрыть ресурсы' : 'Ресурсы'}
-                  </button>
-                </div>
-                
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center">
-                    <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
-                    <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
-                      Переменные в JavaScript
-                    </a>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="md:col-span-3">
+                {loading ? (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
                   </div>
-                  <div className="flex items-center pl-5">
-                    <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
-                    <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-                      let
-                    </a>
+                ) : error ? (
+                  <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
+                    <h2 className="text-xl font-bold mb-2">Ошибка</h2>
+                    <p>{error}</p>
+                    <button 
+                      onClick={() => router.push(`/courses/${courseId}`)}
+                      className="mt-4 inline-flex items-center text-red-700 dark:text-red-300"
+                    >
+                      <ArrowLeft size={16} className="mr-2" />
+                      Вернуться к курсу
+                    </button>
                   </div>
-                  <div className="flex items-center pl-5">
-                    <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
-                    <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-                      const
-                    </a>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
-                    <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
-                      Типы данных
-                    </a>
-                  </div>
-                </div>
-                
-                {showResources && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                    <h4 className="font-medium text-gray-800 dark:text-white mb-3">Дополнительные материалы</h4>
-                    <div className="pl-2 space-y-2 text-sm">
-                      {lesson?.resources.map((resource:any, index:any) => (
-                        <a 
-                          key={index} 
-                          href={resource.url}
-                          className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                          {resource.title}
-                        </a>
-                      ))}
+                ) : (
+                  <AnimatedDiv className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg mr-4">
+                        <FileText className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{lesson?.title}</h1>
                     </div>
-                  </div>
+                    
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <Clock size={16} className="mr-1 text-indigo-500" />
+                        <span>{lesson?.duration}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <Coffee size={16} className="mr-1 text-indigo-500" />
+                        <span>{lesson?.level}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+                      {lesson && renderMarkdown(lesson.content)}
+                    </div>
+                    
+                    <div className="flex justify-between mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <button 
+                        className={`text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center ${!lesson?.prevLessonId && 'opacity-50 cursor-not-allowed'}`}
+                        onClick={() => lesson?.prevLessonId && router.push(`/courses/${courseId}/lessons/${lesson.prevLessonId}`)}
+                        disabled={!lesson?.prevLessonId}
+                      >
+                        <ArrowLeft size={16} className="mr-2" />
+                        Предыдущий урок
+                      </button>
+                      
+                      <button 
+                        onClick={handleCompleteLesson}
+                        className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 px-6 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center"
+                      >
+                        {lesson?.hasQuiz ? 'Пройти тест' : (lesson?.nextLessonId ? 'Следующий урок' : 'Завершить курс')}
+                        <ArrowRight size={16} className="ml-2" />
+                      </button>
+                    </div>
+                  </AnimatedDiv>
                 )}
-                
-                <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="font-medium text-gray-800 dark:text-white mb-3">Ваш прогресс</h4>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Курс {course?.title}</span>
-                    <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">25%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full" style={{ width: '25%' }}></div>
+              </div>
+              
+              <div className="md:col-span-1">
+                <AnimatedDiv delay={200} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 sticky top-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-gray-800 dark:text-white">Навигация по уроку</h3>
+                    <button 
+                      onClick={() => setShowResources(!showResources)}
+                      className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline"
+                    >
+                      {showResources ? 'Скрыть ресурсы' : 'Ресурсы'}
+                    </button>
                   </div>
                   
-                  <div className="flex items-center text-gray-700 dark:text-gray-300 text-sm mt-4">
-                    <CheckSquare size={16} className="text-green-500 mr-2" />
-                    <span>Урок {lesson?.order || '?'} из 12</span>
-                  </div>
-                </div>
-              </AnimatedDiv>
+                  {loading ? (
+                    <div className="py-4 flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center">
+                          <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
+                          <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
+                            Переменные в JavaScript
+                          </a>
+                        </div>
+                        <div className="flex items-center pl-5">
+                          <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
+                          <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                            let
+                          </a>
+                        </div>
+                        <div className="flex items-center pl-5">
+                          <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
+                          <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                            const
+                          </a>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
+                          <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
+                            Типы данных
+                          </a>
+                        </div>
+                      </div>
+                      
+                      {showResources && lesson?.resources && lesson.resources.length > 0 && (
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                          <h4 className="font-medium text-gray-800 dark:text-white mb-3">Дополнительные материалы</h4>
+                          <div className="pl-2 space-y-2 text-sm">
+                            {lesson.resources.map((resource:any, index:any) => (
+                              <a 
+                                key={index} 
+                                href={resource.url}
+                                className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                {resource.title}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+                        <h4 className="font-medium text-gray-800 dark:text-white mb-3">Ваш прогресс</h4>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Курс {course?.title}</span>
+                          <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">25%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
+                          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full" style={{ width: '25%' }}></div>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-700 dark:text-gray-300 text-sm mt-4">
+                          <CheckSquare size={16} className="text-green-500 mr-2" />
+                          <span>Урок {lesson?.order || '?'} из 12</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </AnimatedDiv>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }
