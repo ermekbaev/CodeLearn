@@ -70,7 +70,7 @@ export default function CourseDetailPage({ params }: { params: { courseId: strin
     duration: '10 часов',
     students: 1245,
     rating: 4.8,
-    author: 'Алексей Петров',
+    author: 'Адилет Эрмекбаев',
     updatedAt: '10.03.2025',
     requirements: [
       'Базовые знания HTML и CSS',

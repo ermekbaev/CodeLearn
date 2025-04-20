@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { 
@@ -35,6 +35,7 @@ export default function LessonPage({
         // Запрос данных урока
         const lessonResponse = await axios.get(`/api/lessons/${lessonId}`);
         setLesson(lessonResponse.data);
+        
         
         // Запрос данных курса
         const courseResponse = await axios.get(`/api/courses/${courseId}`);

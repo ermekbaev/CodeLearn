@@ -37,7 +37,6 @@ export default function CoursesPage() {
         setLoading(true);
         // Получаем данные курсов с API
         const response = await axios.get('/api/courses');
-        console.log(response);
         
         
         // Здесь должен быть запрос для получения прогресса, если пользователь авторизован

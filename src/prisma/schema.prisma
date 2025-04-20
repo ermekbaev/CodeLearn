@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String         @id @default(uuid())
+  email     String         @unique
+  password  String
+  name      String
+  createdAt DateTime       @default(now())
+  progress  UserProgress[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  language    String
+  createdAt   DateTime @default(now())
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String         @id @default(uuid())
+  courseId    String
+  title       String
+  content     String         // Текст урока в формате markdown
+  order       Int
+  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  quizzes     Quiz[]
+  userProgress UserProgress[]
+}
+
+model Quiz {
+  id            String   @id @default(uuid())
+  lessonId      String
+  question      String
+  options       String   // JSON массив строк
+  correctAnswer String
+  hint          String?  // Необязательная подсказка
+  explanation   String?  // Необязательное объяснение
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model UserProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  lessonId  String
+  completed Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}

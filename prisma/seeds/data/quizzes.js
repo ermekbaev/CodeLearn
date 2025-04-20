@@ -57,7 +57,8 @@ module.exports = [
   // HTML/CSS курс квизы
   {
     id: "html-quiz-1",
-    lessonId: "6",
+    lessonId: "7",
+    courseId: "3",
     question: "Что означает тег <head> в HTML?",
     options: [
       "Основное содержимое страницы",
@@ -70,11 +71,23 @@ module.exports = [
     explanation:
       "Тег <head> содержит метаданные, такие как title, meta-теги, подключаемые стили и скрипты.",
   },
+  {
+    id: "html-quiz-2",
+    lessonId: "8",
+    courseId: "3",
+    question: "Какое свойство CSS используется для изменения цвета текста?",
+    options: ["background-color", "text-color", "color", "font-color"],
+    correctAnswer: "color",
+    hint: "Это прямое свойство для изменения цвета текста",
+    explanation:
+      "В CSS для изменения цвета текста используется свойство color.",
+  },
 
   // React курс квизы
   {
     id: "react-quiz-1",
-    lessonId: "7",
+    lessonId: "10",
+    courseId: "4",
     question: "Что такое JSX в React?",
     options: [
       "JavaScript-библиотека",
@@ -83,8 +96,20 @@ module.exports = [
       "Метод создания анимаций",
     ],
     correctAnswer: "Расширение синтаксиса JavaScript",
-    hint: "Это синтаксический сахар для описания UI в React",
+    hint: "Это синтаксический сахар для describing UI в React",
     explanation:
       "JSX позволяет описывать структуру пользовательского интерфейса прямо в коде JavaScript",
+  },
+  {
+    id: "react-quiz-2",
+    lessonId: "11",
+    courseId: "4",
+    question:
+      "Какой хук используется для управления состоянием в функциональных компонентах?",
+    options: ["useEffect", "useState", "useContext", "useReducer"],
+    correctAnswer: "useState",
+    hint: "Этот хук позволяет добавлять состояние в функциональные компоненты",
+    explanation:
+      "useState - основной хук для работы с локальным состоянием в функциональных компонентах React",
   },
 ];
