@@ -98,7 +98,7 @@ export default function CourseDetailPage({ params }: { params: { courseId: strin
       completed: true,
       hasQuiz: true,
       nextLessonId: '2',
-      prevLessonId: null, // Первый урок не имеет предыдущего
+      prevLessonId: null, 
     },
     {
       id: '2',

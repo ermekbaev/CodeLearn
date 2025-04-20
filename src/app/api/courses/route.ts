@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       createdAt: course.createdAt,
       lessonsCount: course.lessons.length,
     }));
+    
 
     return NextResponse.json(formattedCourses);
   } catch (error) {
