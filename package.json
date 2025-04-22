@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:seed": "node prisma/seeds/seed-common.js",
+    "db:reset": "prisma migrate reset --force && npm run db:seed",
+    "db:check": "node scripts/check-db.js",
+    "db:init": "node scripts/init-db.js"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

@@ -25,7 +25,13 @@ async function main() {
     for (const course of courses) {
       try {
         await prisma.course.create({
-          data: course,
+          data: {
+            id: course.id,
+            title: course.title,
+            description: course.description,
+            language: course.language,
+            createdAt: course.createdAt || new Date(),
+          },
         });
       } catch (courseError) {
         console.error(`Ошибка при добавлении курса ${course.id}:`, courseError);
@@ -38,7 +44,13 @@ async function main() {
     for (const lesson of lessons) {
       try {
         await prisma.lesson.create({
-          data: lesson,
+          data: {
+            id: lesson.id,
+            courseId: lesson.courseId,
+            title: lesson.title,
+            content: lesson.content,
+            order: lesson.order,
+          },
         });
       } catch (lessonError) {
         console.error(`Ошибка при добавлении урока ${lesson.id}:`, lessonError);
@@ -50,17 +62,17 @@ async function main() {
     console.log("Добавление тестов...");
     for (const quiz of quizzes) {
       try {
+        // Убираем hint и explanation, так как их нет в схеме
+        const quizData = {
+          id: quiz.id,
+          lessonId: quiz.lessonId,
+          question: quiz.question,
+          options: JSON.stringify(quiz.options), // Преобразуем массив в строку JSON
+          correctAnswer: quiz.correctAnswer,
+        };
+
         await prisma.quiz.create({
-          data: {
-            id: quiz.id,
-            lessonId: quiz.lessonId,
-            question: quiz.question,
-            options: JSON.stringify(quiz.options), // Преобразуем массив в строку JSON
-            correctAnswer: quiz.correctAnswer,
-            // Добавляем подсказку и объяснение, если они есть
-            ...(quiz.hint && { hint: quiz.hint }),
-            ...(quiz.explanation && { explanation: quiz.explanation }),
-          },
+          data: quizData,
         });
       } catch (quizError) {
         console.error(`Ошибка при добавлении квиза ${quiz.id}:`, quizError);

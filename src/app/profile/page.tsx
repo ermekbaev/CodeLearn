@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AnimatedDiv from '../components/AnimatedDiv';
 import { useAuth } from '@/contexts/AuthContext';
+import LanguageIcon from '../components/Language/LanguageIcon';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -39,22 +40,6 @@ export default function ProfilePage() {
     { id: 3, name: 'Кодер', description: 'Решите 10 практических заданий', icon: 'code', earned: false }
   ];
 
-  // Компонент иконки языка
-  const LanguageIcon = ({ language }:any) => {
-    const bgColors = {
-      js: 'bg-yellow-500',
-      python: 'bg-blue-600',
-      html: 'bg-orange-600',
-      react: 'bg-blue-400'
-    };
-    
-    return (
-        //@ts-ignore
-      <div className={`${bgColors[language.toLowerCase()]} w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold`}>
-        {language.substring(0, 2).toUpperCase()}
-      </div>
-    );
-  };
   
   const tabs = [
     { id: 'progress', label: 'Прогресс', icon: <ChartBar className="h-5 w-5" /> },

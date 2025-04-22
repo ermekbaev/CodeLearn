@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     // Исправление: ждем когда параметры будут доступны
-    const { id } = params;
+    const  id  = params.id;
 
     // Получаем данные курса по ID
     const course = await prisma.course.findUnique({

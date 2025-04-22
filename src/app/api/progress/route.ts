@@ -53,10 +53,9 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getCurrentUser(req);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Необходима аутентификация' },
-        { status: 401 }
-      );
+      // Возвращаем пустой массив вместо ошибки для неаутентифицированных пользователей
+      console.log('Пользователь не аутентифицирован, возвращаем пустой прогресс');
+      return NextResponse.json([]);
     }
 
     const { searchParams } = new URL(req.url);

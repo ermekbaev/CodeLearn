@@ -25,24 +25,22 @@ if (!fs.existsSync(dataDir)) {
 console.log("🚀 Инициализация базы данных...");
 
 try {
-  // Шаг 1: Создаем схему Prisma, если она отсутствует
-  const schemaPath = path.join(prismaDir, "schema.prisma");
-  if (!fs.existsSync(schemaPath)) {
-    console.log("\n📝 Создание схемы Prisma...");
-    fs.copyFileSync(
-      path.join(__dirname, "../src/prisma/schema.prisma"),
-      schemaPath,
-      fs.constants.COPYFILE_EXCL
-    );
+  // Шаг 1: Удаляем существующую базу данных
+  const dbPath = path.join(prismaDir, "dev.db");
+  if (fs.existsSync(dbPath)) {
+    console.log("\n🗑️ Удаление существующей базы данных...");
+    fs.unlinkSync(dbPath);
   }
 
   // Шаг 2: Генерация клиента Prisma
   console.log("\n🔄 Генерация клиента Prisma...");
   execSync("npx prisma generate", { stdio: "inherit" });
 
-  // Шаг 3: Запуск миграций Prisma
-  console.log("\n📊 Применение миграций...");
-  execSync("npx prisma migrate dev --name init", { stdio: "inherit" });
+  // Шаг 3: Создаем новую миграцию
+  console.log("\n📊 Создание миграции базы данных...");
+  execSync("npx prisma migrate dev --name init --skip-seed", {
+    stdio: "inherit",
+  });
 
   // Шаг 4: Заполнение базы данных тестовыми данными
   console.log("\n🌱 Заполнение базы данных тестовыми данными...");
