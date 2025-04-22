@@ -37,6 +37,8 @@ export default function CoursesPage() {
         setLoading(true);
         // Получаем данные курсов с API
         const response = await axios.get('/api/courses');
+        console.log(response);
+        
         
         
         // Здесь должен быть запрос для получения прогресса, если пользователь авторизован
@@ -66,60 +68,62 @@ export default function CoursesPage() {
         setError('Не удалось загрузить список курсов. Пожалуйста, попробуйте позже.');
         
         // Загружаем моковые данные для демонстрации
-        const mockCourses = [
-          {
-            id: '1',
-            title: 'JavaScript основы',
-            description: 'Изучите основы JavaScript: переменные, функции, объекты и многое другое.',
-            language: 'JavaScript',
-            lessonsCount: 12,
-            progress: 25,
-            image: 'js',
-            rating: 4.8,
-            students: 1245
-          },
-          {
-            id: '2',
-            title: 'Python для начинающих',
-            description: 'Введение в Python: синтаксис, типы данных, функции и ООП.',
-            language: 'Python',
-            lessonsCount: 15,
-            progress: 0,
-            image: 'python',
-            rating: 4.9,
-            students: 2100
-          },
-          {
-            id: '3',
-            title: 'Основы HTML и CSS',
-            description: 'Создание веб-страниц с использованием HTML5 и CSS3.',
-            language: 'HTML/CSS',
-            lessonsCount: 8,
-            progress: 75,
-            image: 'html',
-            rating: 4.7,
-            students: 1830
-          },
-          {
-            id: '4',
-            title: 'React для фронтенд разработки',
-            description: 'Разработка одностраничных приложений с React.',
-            language: 'React',
-            lessonsCount: 20,
-            progress: 10,
-            image: 'react',
-            rating: 4.9,
-            students: 985
-          }
-        ];
+        // const mockCourses = [
+        //   {
+        //     id: '1',
+        //     title: 'JavaScript основы',
+        //     description: 'Изучите основы JavaScript: переменные, функции, объекты и многое другое.',
+        //     language: 'JavaScript',
+        //     lessonsCount: 12,
+        //     progress: 25,
+        //     image: 'js',
+        //     rating: 4.8,
+        //     students: 1245
+        //   },
+        //   {
+        //     id: '2',
+        //     title: 'Python для начинающих',
+        //     description: 'Введение в Python: синтаксис, типы данных, функции и ООП.',
+        //     language: 'Python',
+        //     lessonsCount: 15,
+        //     progress: 0,
+        //     image: 'python',
+        //     rating: 4.9,
+        //     students: 2100
+        //   },
+        //   {
+        //     id: '3',
+        //     title: 'Основы HTML и CSS',
+        //     description: 'Создание веб-страниц с использованием HTML5 и CSS3.',
+        //     language: 'HTML/CSS',
+        //     lessonsCount: 8,
+        //     progress: 75,
+        //     image: 'html',
+        //     rating: 4.7,
+        //     students: 1830
+        //   },
+        //   {
+        //     id: '4',
+        //     title: 'React для фронтенд разработки',
+        //     description: 'Разработка одностраничных приложений с React.',
+        //     language: 'React',
+        //     lessonsCount: 20,
+        //     progress: 10,
+        //     image: 'react',
+        //     rating: 4.9,
+        //     students: 985
+        //   }
+        // ];
         
-        setCourses(mockCourses);
-        setLoading(false);
+        // setCourses(mockCourses);
+        // setLoading(false);
       }
     };
     
     fetchCourses();
   }, []);
+  console.log(courses);
+  
   
   const filteredCourses = () => {
     switch (filter) {

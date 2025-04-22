@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+  // Получаем все уроки для указанного курса
     const lessons = await prisma.lesson.findMany({
       where: {
         courseId: courseId,
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest) {
         id: true,
         title: true,
         order: true,
+        courseId: true,
         quizzes: {
           select: {
             id: true,

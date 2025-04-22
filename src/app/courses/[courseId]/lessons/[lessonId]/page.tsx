@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { 
@@ -16,6 +16,22 @@ import Header from '@/app/components/Header';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import AnimatedDiv from '@/app/components/AnimatedDiv';
 
+interface LessonData {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+  courseId: string;
+  hasQuiz?: boolean;
+  nextLessonId?: string;
+  prevLessonId?: string;
+}
+
+interface CourseData {
+  id: string;
+  title: string;
+}
+
 export default function LessonPage({ 
   params 
 }: { 
@@ -23,100 +39,43 @@ export default function LessonPage({
 }) {
   const { courseId, lessonId } = params;
   const router = useRouter();
+  
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [lesson, setLesson] = useState<any>(null);
-  const [course, setCourse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [lesson, setLesson] = useState<LessonData | null>(null);
+  const [course, setCourse] = useState<CourseData | null>(null);
   const [showResources, setShowResources] = useState(false);
+  
+  // Дополнительные ресурсы (можно будет получать с API в будущем)
+  const resources = [
+    { title: 'MDN Web Docs - JavaScript Variables', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var' },
+    { title: 'MDN Web Docs - JavaScript Data Types', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures' },
+    { title: 'JavaScript.info - Variables', url: 'https://javascript.info/variables' }
+  ];
   
   useEffect(() => {
     const fetchLessonData = async () => {
       try {
-        // Запрос данных урока
+        setLoading(true);
+        
+        // Загрузка данных урока
         const lessonResponse = await axios.get(`/api/lessons/${lessonId}`);
         setLesson(lessonResponse.data);
         
-        
-        // Запрос данных курса
-        const courseResponse = await axios.get(`/api/courses/${courseId}`);
-        setCourse(courseResponse.data);
+        // Получение данных о курсе
+        if (lessonResponse.data.course) {
+          setCourse(lessonResponse.data.course);
+        } else {
+          // Если данные о курсе не включены в ответ урока,
+          // делаем дополнительный запрос
+          const courseResponse = await axios.get(`/api/courses/${courseId}`);
+          setCourse(courseResponse.data);
+        }
         
         setLoading(false);
       } catch (err) {
         console.error('Ошибка при загрузке урока:', err);
         setError('Не удалось загрузить данные урока. Пожалуйста, попробуйте позже.');
-        
-        // Загружаем моковые данные для демонстрации
-        const mockCourse = {
-          id: courseId,
-          title: 'JavaScript основы',
-        };
-        
-        const mockLesson = {
-          id: lessonId,
-          courseId: courseId,
-          title: 'Переменные и типы данных в JavaScript',
-          content: `
-## Переменные в JavaScript
-
-В JavaScript для объявления переменных используются ключевые слова \`let\`, \`const\` и устаревшее \`var\`.
-
-### let
-
-\`let\` позволяет объявить переменную, значение которой может быть изменено:
-
-\`\`\`javascript
-let name = "John";
-name = "Jane"; // Можно изменить значение
-\`\`\`
-
-### const
-
-\`const\` используется для объявления констант, значения которых нельзя изменить после присвоения:
-
-\`\`\`javascript
-const PI = 3.14159;
-// PI = 3.14; // Вызовет ошибку
-\`\`\`
-
-## Типы данных
-
-JavaScript имеет следующие основные типы данных:
-
-1. **String** - строки
-2. **Number** - числа
-3. **Boolean** - логические значения (true/false)
-4. **Object** - объекты
-5. **Array** - массивы (тоже объекты)
-6. **null** - специальное значение "ничего"
-7. **undefined** - значение неопределенной переменной
-
-### Пример использования разных типов данных:
-
-\`\`\`javascript
-let name = "Alice"; // String
-let age = 25; // Number
-let isStudent = true; // Boolean
-let person = { name: "Bob", age: 30 }; // Object
-let colors = ["red", "green", "blue"]; // Array
-\`\`\`
-          `,
-          order: 2,
-          level: 'Начальный',
-          duration: '15 минут',
-          resources: [
-            { title: 'MDN Web Docs - JavaScript Variables', url: '#' },
-            { title: 'MDN Web Docs - JavaScript Data Types', url: '#' },
-            { title: 'JavaScript.info - Variables', url: '#' }
-          ],
-          nextLessonId: '3',
-          prevLessonId: '1',
-          hasQuiz: true
-        };
-        
-        setCourse(mockCourse);
-        setLesson(mockLesson);
-        setLoading(false);
       }
     };
     
@@ -124,7 +83,7 @@ let colors = ["red", "green", "blue"]; // Array
   }, [courseId, lessonId]);
   
   // Функция для рендера markdown
-  const renderMarkdown = (content:string) => {
+  const renderMarkdown = (content: string) => {
     if (!content) return null;
     
     const parts = content.split('```');
@@ -224,18 +183,19 @@ let colors = ["red", "green", "blue"]; // Array
     );
   };
   
+  // Функция для сохранения прогресса урока
   const handleCompleteLesson = async () => {
     try {
-      // Здесь будет запрос к API для отметки урока как завершенного
+      // Запрос к API для отметки урока как завершенного
       await axios.post('/api/progress', { 
-        lessonId: lesson.id, 
+        lessonId: lesson?.id, 
         completed: true 
       });
       
-      if (lesson.hasQuiz) {
+      if (lesson?.hasQuiz) {
         // Если у урока есть квиз, перенаправляем на его страницу
         router.push(`/courses/${courseId}/lessons/${lessonId}/quiz`);
-      } else if (lesson.nextLessonId) {
+      } else if (lesson?.nextLessonId) {
         // Иначе перенаправляем на следующий урок, если он есть
         router.push(`/courses/${courseId}/lessons/${lesson.nextLessonId}`);
       } else {
@@ -245,8 +205,30 @@ let colors = ["red", "green", "blue"]; // Array
     } catch (err) {
       console.error('Ошибка при завершении урока:', err);
       setError('Не удалось отметить урок как завершенный. Пожалуйста, попробуйте снова.');
+      
+      // Для демо-режима продолжаем навигацию даже при ошибке с API
+      if (lesson?.hasQuiz) {
+        router.push(`/courses/${courseId}/lessons/${lessonId}/quiz`);
+      } else if (lesson?.nextLessonId) {
+        router.push(`/courses/${courseId}/lessons/${lesson.nextLessonId}`);
+      } else {
+        router.push(`/courses/${courseId}`);
+      }
     }
   };
+  
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Header />
+          <div className="flex flex-1 justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
   
   return (
     <ProtectedRoute>
@@ -273,11 +255,7 @@ let colors = ["red", "green", "blue"]; // Array
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="md:col-span-3">
-                {loading ? (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-                  </div>
-                ) : error ? (
+                {error ? (
                   <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
                     <h2 className="text-xl font-bold mb-2">Ошибка</h2>
                     <p>{error}</p>
@@ -301,11 +279,11 @@ let colors = ["red", "green", "blue"]; // Array
                     <div className="flex items-center space-x-4 mb-6">
                       <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                         <Clock size={16} className="mr-1 text-indigo-500" />
-                        <span>{lesson?.duration}</span>
+                        <span>15 минут</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                         <Coffee size={16} className="mr-1 text-indigo-500" />
-                        <span>{lesson?.level}</span>
+                        <span>Начальный уровень</span>
                       </div>
                     </div>
                     
@@ -347,78 +325,70 @@ let colors = ["red", "green", "blue"]; // Array
                     </button>
                   </div>
                   
-                  {loading ? (
-                    <div className="py-4 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center">
+                      <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
+                      <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
+                        Переменные в JavaScript
+                      </a>
                     </div>
-                  ) : (
-                    <>
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center">
-                          <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
-                          <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
-                            Переменные в JavaScript
+                    <div className="flex items-center pl-5">
+                      <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
+                      <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        let
+                      </a>
+                    </div>
+                    <div className="flex items-center pl-5">
+                      <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
+                      <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                        const
+                      </a>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
+                      <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
+                        Типы данных
+                      </a>
+                    </div>
+                  </div>
+                  
+                  {showResources && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                      <h4 className="font-medium text-gray-800 dark:text-white mb-3">Дополнительные материалы</h4>
+                      <div className="pl-2 space-y-2 text-sm">
+                        {resources.map((resource, index) => (
+                          <a 
+                            key={index} 
+                            href={resource.url}
+                            className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            {resource.title}
                           </a>
-                        </div>
-                        <div className="flex items-center pl-5">
-                          <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
-                          <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-                            let
-                          </a>
-                        </div>
-                        <div className="flex items-center pl-5">
-                          <div className="w-1.5 h-6 bg-indigo-400 rounded-r-md mr-3"></div>
-                          <a href="#" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-                            const
-                          </a>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="w-2 h-8 bg-indigo-600 rounded-r-md mr-3"></div>
-                          <a href="#" className="text-gray-800 dark:text-white font-medium hover:text-indigo-600 dark:hover:text-indigo-400">
-                            Типы данных
-                          </a>
-                        </div>
+                        ))}
                       </div>
-                      
-                      {showResources && lesson?.resources && lesson.resources.length > 0 && (
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                          <h4 className="font-medium text-gray-800 dark:text-white mb-3">Дополнительные материалы</h4>
-                          <div className="pl-2 space-y-2 text-sm">
-                            {lesson.resources.map((resource:any, index:any) => (
-                              <a 
-                                key={index} 
-                                href={resource.url}
-                                className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                                {resource.title}
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
-                        <h4 className="font-medium text-gray-800 dark:text-white mb-3">Ваш прогресс</h4>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Курс {course?.title}</span>
-                          <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">25%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
-                          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full" style={{ width: '25%' }}></div>
-                        </div>
-                        
-                        <div className="flex items-center text-gray-700 dark:text-gray-300 text-sm mt-4">
-                          <CheckSquare size={16} className="text-green-500 mr-2" />
-                          <span>Урок {lesson?.order || '?'} из 12</span>
-                        </div>
-                      </div>
-                    </>
+                    </div>
                   )}
+                  
+                  <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-800 dark:text-white mb-3">Ваш прогресс</h4>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Курс {course?.title}</span>
+                      <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">25%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4">
+                      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full" style={{ width: '25%' }}></div>
+                    </div>
+                    
+                    <div className="flex items-center text-gray-700 dark:text-gray-300 text-sm mt-4">
+                      <CheckSquare size={16} className="text-green-500 mr-2" />
+                      <span>Урок {lesson?.order || '?'} из 12</span>
+                    </div>
+                  </div>
                 </AnimatedDiv>
               </div>
             </div>

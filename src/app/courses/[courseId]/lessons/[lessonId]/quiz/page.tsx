@@ -15,6 +15,22 @@ import Header from '@/app/components/Header';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import AnimatedDiv from '@/app/components/AnimatedDiv';
 
+interface QuizData {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer?: string;
+  hint?: string;
+}
+
+interface LessonData {
+  id: string;
+  title: string;
+  order: number;
+  courseId: string;
+  nextLessonId?: string;
+}
+
 export default function QuizPage({ 
   params 
 }: { 
@@ -24,9 +40,9 @@ export default function QuizPage({
   const router = useRouter();
   
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [quiz, setQuiz] = useState<any>(null);
-  const [lesson, setLesson] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [quiz, setQuiz] = useState<QuizData | null>(null);
+  const [lesson, setLesson] = useState<LessonData | null>(null);
   const [course, setCourse] = useState<any>(null);
   
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -56,34 +72,6 @@ export default function QuizPage({
       } catch (err) {
         console.error('Ошибка при загрузке данных:', err);
         setError('Не удалось загрузить данные теста. Пожалуйста, попробуйте позже.');
-        
-        // Загружаем моковые данные для демонстрации
-        const mockQuiz = {
-          id: '1',
-          lessonId: lessonId,
-          question: 'Какое ключевое слово используется для объявления константы в JavaScript?',
-          options: ['var', 'let', 'const', 'fixed'],
-          correctAnswer: 'const',
-          hint: 'Вспомните, какое ключевое слово используется, когда вы хотите, чтобы значение переменной не изменялось после его первоначального присвоения.'
-        };
-        
-        const mockLesson = {
-          id: lessonId,
-          title: 'Переменные и типы данных в JavaScript',
-          order: 2,
-          courseId: courseId,
-          nextLessonId: '3'
-        };
-        
-        const mockCourse = {
-          id: courseId,
-          title: 'JavaScript основы'
-        };
-        
-        setQuiz(mockQuiz);
-        setLesson(mockLesson);
-        setCourse(mockCourse);
-        setLoading(false);
       }
     };
     
@@ -95,7 +83,7 @@ export default function QuizPage({
     
     try {
       // Отправляем ответ на сервер
-      const response = await axios.post(`/api/quiz/${quiz.id}`, { 
+      const response = await axios.post(`/api/quiz/${quiz?.id}`, { 
         answer: selectedOption 
       });
       
@@ -110,7 +98,7 @@ export default function QuizPage({
       // Отмечаем урок как пройденный, если ответ правильный
       if (isCorrect) {
         await axios.post('/api/progress', { 
-          lessonId: lesson.id, 
+          lessonId: lesson?.id, 
           completed: true 
         });
       }
@@ -121,10 +109,10 @@ export default function QuizPage({
       setError('Не удалось проверить ответ. Пожалуйста, попробуйте снова.');
       
       // Для демонстрации без API
-      const isAnswerCorrect = selectedOption === quiz.correctAnswer;
+      const isAnswerCorrect = selectedOption === quiz?.correctAnswer;
       setIsCorrect(isAnswerCorrect);
       if (!isAnswerCorrect) {
-        setCorrectAnswer(quiz.correctAnswer);
+        setCorrectAnswer(quiz?.correctAnswer || null);
       }
       setIsSubmitted(true);
     }
@@ -137,6 +125,19 @@ export default function QuizPage({
       router.push(`/courses/${courseId}/lessons/${lessonId}`);
     }
   };
+  
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Header />
+          <div className="flex flex-1 justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
   
   return (
     <ProtectedRoute>
@@ -163,11 +164,7 @@ export default function QuizPage({
               </div>
             </AnimatedDiv>
             
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-              </div>
-            ) : error ? (
+            {error && !quiz ? (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
                 <h2 className="text-xl font-bold mb-2">Ошибка</h2>
                 <p>{error}</p>
@@ -199,7 +196,7 @@ export default function QuizPage({
                       <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">{quiz?.question}</h2>
                       
                       <div className="space-y-4">
-                        {quiz?.options.map((option: string, index: number) => (
+                        {quiz?.options.map((option, index) => (
                           <div 
                             key={index}
                             className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
@@ -314,10 +311,10 @@ export default function QuizPage({
                         </div>
                       )}
                       
-                      {showHint && !isSubmitted && (
+                      {showHint && !isSubmitted && quiz?.hint && (
                         <div className="mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg p-4">
                           <div className="font-medium mb-1">Подсказка:</div>
-                          <p>{quiz?.hint}</p>
+                          <p>{quiz.hint}</p>
                         </div>
                       )}
                     </div>
@@ -344,7 +341,7 @@ export default function QuizPage({
                         <div className="w-5 h-5 rounded-full border-2 border-indigo-500 flex items-center justify-center mr-3">
                           <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full"></div>
                         </div>
-                        <span className="text-gray-900 dark:text-white font-medium">Урок 2 - Переменные</span>
+                        <span className="text-gray-900 dark:text-white font-medium">Урок {lesson?.order} - {lesson?.title.substring(0, 15)}...</span>
                       </div>
                       <div className="flex items-center opacity-60">
                         <div className="w-5 h-5 rounded-full border-2 border-gray-400 mr-3"></div>
