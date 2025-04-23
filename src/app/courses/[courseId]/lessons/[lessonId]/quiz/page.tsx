@@ -194,32 +194,32 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                       
                       <div className="space-y-4">
                         {quiz?.options.map((option, index) => (
-                          <div 
-                            key={index}
-                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                              selectedOption === option 
-                                ? isSubmitted 
-                                  ? option === quiz.correctAnswer 
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600' 
-                                    : 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600'
-                                  : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 dark:border-indigo-400' 
-                                : 'hover:border-gray-400 dark:hover:border-gray-500 border-gray-200 dark:border-gray-700'
-                            }`}
-                            onClick={() => !isSubmitted && setSelectedOption(option)}
-                          >
+                        <div 
+                          key={index}
+                          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                            selectedOption === option 
+                              ? isSubmitted 
+                                ? isCorrect 
+                                  ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600' 
+                                  : 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600'
+                                : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 dark:border-indigo-400' 
+                              : 'hover:border-gray-400 dark:hover:border-gray-500 border-gray-200 dark:border-gray-700'
+                          }`}
+                          onClick={() => !isSubmitted && setSelectedOption(option)}
+                           >
                             <div className="flex items-center">
                               <div className={`w-6 h-6 rounded-full border-2 ${
                                 selectedOption === option 
                                   ? isSubmitted 
-                                    ? option === quiz.correctAnswer 
+                                    ? isCorrect 
                                       ? 'border-green-500 bg-green-500 dark:border-green-600 dark:bg-green-600' 
                                       : 'border-red-500 bg-red-500 dark:border-red-600 dark:bg-red-600'
                                     : 'border-indigo-500 bg-indigo-500 dark:border-indigo-400 dark:bg-indigo-400' 
                                   : 'border-gray-400 dark:border-gray-500'
-                              } flex items-center justify-center mr-3`}>
+                              }  flex items-center justify-center mr-3`}>
                                 {selectedOption === option && (
                                   isSubmitted ? (
-                                    option === quiz.correctAnswer ? (
+                                    isCorrect ? (
                                       <CheckCircle className="w-4 h-4 text-white" />
                                     ) : (
                                       <X className="w-4 h-4 text-white" />
@@ -231,10 +231,10 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                               </div>
                               <div>
                                 <div className="font-medium text-gray-800 dark:text-white">{option}</div>
-                                {isSubmitted && selectedOption === option && option === quiz.correctAnswer && (
+                                {isSubmitted && selectedOption === option && isCorrect && (
                                   <div className="text-green-600 dark:text-green-400 text-sm mt-1">Правильный ответ!</div>
                                 )}
-                                {isSubmitted && selectedOption === option && option !== quiz.correctAnswer && (
+                                {isSubmitted && selectedOption === option && !isCorrect && (
                                   <div className="text-red-600 dark:text-red-400 text-sm mt-1">Неправильный ответ</div>
                                 )}
                               </div>
