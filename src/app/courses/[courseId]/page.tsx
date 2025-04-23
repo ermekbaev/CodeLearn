@@ -103,6 +103,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
     fetchCourseData();
   }, [courseId]);
   
+  
   // Компонент для отображения прогресса курса
   const CourseProgress = () => {
     const completedLessons = lessons.filter(lesson => lesson.completed).length;

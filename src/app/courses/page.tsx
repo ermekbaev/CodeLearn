@@ -38,23 +38,34 @@ export default function CoursesPage() {
         // Получаем данные курсов с API
         const response = await axios.get('/api/courses');
         
-        // Здесь должен быть запрос для получения прогресса, если пользователь авторизован
-        // const progressResponse = await axios.get('/api/progress');
+        // Объявляем переменную для прогресса
+        let progressData = [];
+        try {
+          const progressResponse = await axios.get('/api/progress');
+          progressData = progressResponse.data;
+        } catch (progressErr) {
+          console.error('Не удалось загрузить прогресс курсов', progressErr);
+        }
         
-        // Для демонстрации добавим моковый прогресс к некоторым курсам
-        const coursesWithProgress = response.data.map((course: Course, index: number) => {
-          // Демо-прогресс для первого и третьего курса
-          let progress = 0;
-          if (index === 0) progress = 25;
-          if (index === 2) progress = 75;
+        const coursesWithProgress = response.data.map((course:Course) => {
+          // Находим все завершенные уроки для данного курса по данным из API прогресса
+          const completedLessons = progressData.filter((progress: { lesson: { courseId: string; }; completed: any; }) => {
+            return progress.lesson && progress.lesson.courseId === course.id && progress.completed;
+          });
+          
+          // Расчет процента завершения
+          const progressPercentage = course.lessonsCount > 0 
+            ? Math.round((completedLessons.length / course.lessonsCount) * 100) 
+            : 0;
           
           return {
             ...course,
-            progress,
-            // Дополнительные демо-данные, которые могут отсутствовать в API
-            image: ['js', 'python', 'html', 'react'][index % 4],
-            rating: 4.5 + (index % 5) / 10,
-            students: 500 + index * 200
+            progress: progressPercentage,
+            // Дополнительные демо-данные
+            image: course.language.toLowerCase().replace(/[^a-z]/g, ''),
+            rating: 4.5 + (Math.random() * 0.5), // Случайный рейтинг
+            students: 500 + Math.floor(Math.random() * 1000),
+            lessonsCount: course.lessonsCount
           };
         });
         
@@ -63,62 +74,13 @@ export default function CoursesPage() {
       } catch (err) {
         console.error('Ошибка при получении данных курсов:', err);
         setError('Не удалось загрузить список курсов. Пожалуйста, попробуйте позже.');
-        
-        // Загружаем моковые данные для демонстрации
-        // const mockCourses = [
-        //   {
-        //     id: '1',
-        //     title: 'JavaScript основы',
-        //     description: 'Изучите основы JavaScript: переменные, функции, объекты и многое другое.',
-        //     language: 'JavaScript',
-        //     lessonsCount: 12,
-        //     progress: 25,
-        //     image: 'js',
-        //     rating: 4.8,
-        //     students: 1245
-        //   },
-        //   {
-        //     id: '2',
-        //     title: 'Python для начинающих',
-        //     description: 'Введение в Python: синтаксис, типы данных, функции и ООП.',
-        //     language: 'Python',
-        //     lessonsCount: 15,
-        //     progress: 0,
-        //     image: 'python',
-        //     rating: 4.9,
-        //     students: 2100
-        //   },
-        //   {
-        //     id: '3',
-        //     title: 'Основы HTML и CSS',
-        //     description: 'Создание веб-страниц с использованием HTML5 и CSS3.',
-        //     language: 'HTML/CSS',
-        //     lessonsCount: 8,
-        //     progress: 75,
-        //     image: 'html',
-        //     rating: 4.7,
-        //     students: 1830
-        //   },
-        //   {
-        //     id: '4',
-        //     title: 'React для фронтенд разработки',
-        //     description: 'Разработка одностраничных приложений с React.',
-        //     language: 'React',
-        //     lessonsCount: 20,
-        //     progress: 10,
-        //     image: 'react',
-        //     rating: 4.9,
-        //     students: 985
-        //   }
-        // ];
-        
-        // setCourses(mockCourses);
-        // setLoading(false);
+        setLoading(false);
       }
     };
     
     fetchCourses();
   }, []);
+  
   
   const handleFindCourses = () => {
     router.push("/find-courses")
