@@ -58,7 +58,7 @@ export default function CourseCard({
           </div>
         </div>
         
-        <p className="text-gray-600 dark:text-gray-300 mb-4">{description}</p>
+        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 overflow-hidden">{description}</p>
         
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg text-center">
@@ -75,20 +75,24 @@ export default function CourseCard({
           </div>
         </div>
         
-        {progress > 0 && (
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Ваш прогресс</span>
-              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{progress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full transition-all duration-500" 
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1">
+            {progress > 0 ? (
+              <>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Ваш прогресс</span>
+                <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{progress}%</span>
+              </>
+            ) : (
+              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Начните курс</span>
+            )}
           </div>
-        )}
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
         
         <button 
           className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center"

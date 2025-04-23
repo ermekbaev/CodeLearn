@@ -186,13 +186,6 @@ export async function POST(
     
     return NextResponse.json(response);
   } catch (error) {
-    console.error('=== POST QUIZ ERROR ===');
-    //@ts-ignore
-    console.error('Error type:', error.constructor.name);
-    //@ts-ignore
-    console.error('Error message:', error.message);
-    //@ts-ignore
-    console.error('Error stack:', error.stack);
     
     return NextResponse.json(
       { error: 'Что-то пошло не так при проверке ответа' },

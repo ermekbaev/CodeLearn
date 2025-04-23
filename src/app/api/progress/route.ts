@@ -124,11 +124,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    console.log("=== GET PROGRESS STARTED ===");
     
     // Аутентификация пользователя
     const user = await getCurrentUser(req);
-    console.log("User authenticated:", user ? "Yes" : "No");
     
     if (!user) {
       console.log('Пользователь не аутентифицирован, возвращаем пустой прогресс');
@@ -229,13 +227,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(formattedProgress);
     }
   } catch (error) {
-    console.error('=== GET PROGRESS ERROR ===');
-    //@ts-ignore
-    console.error('Error type:', error.constructor.name);
-    //@ts-ignore
-    console.error('Error message:', error.message);
-    //@ts-ignore
-    console.error('Error stack:', error.stack);
     
     return NextResponse.json(
       { error: 'Что-то пошло не так при получении прогресса' },
