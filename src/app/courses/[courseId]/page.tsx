@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, JSX } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/app/components/Header';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import { Book, FileText, Clock, ChevronRight, ArrowLeft, CheckSquare, Award, User, Star } from 'lucide-react';
 import LanguageIcon from '@/app/components/Language/LanguageIcon';
+import React from 'react';
 
 interface Lesson {
   id: string;
@@ -38,8 +39,11 @@ interface Course {
   skills: string[];
 }
 
-export default function CourseDetailPage({ params }: { params: { courseId: string } }) {
-  const { courseId } = params;
+export default function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
+  // Используем React.use для разрешения Promise параметров
+  const resolvedParams = React.use(params);
+  const { courseId } = resolvedParams;
+  
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -48,7 +52,6 @@ export default function CourseDetailPage({ params }: { params: { courseId: strin
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [progress, setProgress] = useState<number>(0);
   
-  
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
@@ -56,11 +59,9 @@ export default function CourseDetailPage({ params }: { params: { courseId: strin
         // Запрос данных курса
         const courseResponse = await axios.get(`/api/courses/${courseId}`);
         setCourse(courseResponse.data);
-        console.log('Course data:', courseResponse.data);
         
         // Запрос уроков курса
         const lessonsResponse = await axios.get(`/api/lessons?courseId=${courseId}`);
-        console.log('Lessons data:', lessonsResponse.data);
         
         // Получаем прогресс пользователя по курсу
         let userProgress = null;
@@ -68,7 +69,7 @@ export default function CourseDetailPage({ params }: { params: { courseId: strin
           const progressResponse = await axios.get(`/api/progress?courseId=${courseId}`);
           userProgress = progressResponse.data;
         } catch (err) {
-          // console.log('Не удалось загрузить прогресс пользователя', err);
+          console.log('Не удалось загрузить прогресс пользователя', err);
         }
         
         // Объединяем данные уроков с прогрессом

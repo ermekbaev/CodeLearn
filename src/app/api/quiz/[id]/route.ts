@@ -4,10 +4,12 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const lessonId = params.id;
+    // Использование await для получения параметров маршрута
+    const { id } = await Promise.resolve(context.params);
+    const lessonId = id;
 
     const quiz = await prisma.quiz.findFirst({
       where: {
@@ -39,7 +41,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const user = await getCurrentUser(req);
@@ -50,7 +52,10 @@ export async function POST(
       );
     }
 
-    const quizId = params.id;
+    // Использование await для получения параметров маршрута
+    const { id } = await Promise.resolve(context.params);
+    const quizId = id;
+    
     const { answer } = await req.json();
 
     const quiz = await prisma.quiz.findUnique({

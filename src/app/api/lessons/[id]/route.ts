@@ -4,10 +4,10 @@ import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    const { id } = await Promise.resolve(context.params);
 
     // Получаем урок по ID
     const lesson = await prisma.lesson.findUnique({

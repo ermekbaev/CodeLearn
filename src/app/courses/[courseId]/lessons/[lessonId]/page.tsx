@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { 
@@ -32,12 +32,9 @@ interface CourseData {
   title: string;
 }
 
-export default function LessonPage({ 
-  params 
-}: { 
-  params: { courseId: string; lessonId: string } 
-}) {
-  const { courseId, lessonId } = params;
+export default function LessonPage({ params }: { params: Promise<{ courseId: string; lessonId:string }> }) {
+  const resolvedParams = React.use(params);
+  const { courseId, lessonId } = resolvedParams;
   const router = useRouter();
   
   const [loading, setLoading] = useState(true);

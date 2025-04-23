@@ -58,12 +58,12 @@ const LanguageIcon: React.FC<LanguageIconProps> = ({
       <svg className={`${sizeClasses[size]} ${className}`} viewBox="0 0 256 255" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid">
       <defs>
           <linearGradient x1="12.959%" y1="12.039%" x2="79.639%" y2="78.201%" id="pythonBlue">
-              <stop stop-color="#387EB8" offset="0%"/>
-              <stop stop-color="#366994" offset="100%"/>
+              <stop stopColor="#387EB8" offset="0%"/>
+              <stop stopColor="#366994" offset="100%"/>
           </linearGradient>
           <linearGradient x1="19.128%" y1="20.579%" x2="90.742%" y2="88.429%" id="pythonYellow">
-              <stop stop-color="#FFE052" offset="0%"/>
-              <stop stop-color="#FFC331" offset="100%"/>
+              <stop stopColor="#FFE052" offset="0%"/>
+              <stop stopColor="#FFC331" offset="100%"/>
           </linearGradient>
       </defs>
       <path d="M126.916,0.072 C62.084,0.072 64.896,28.153 64.896,28.153 L64.973,57.229 L128.001,57.229 L128.001,70.717 L41.631,70.717 C41.631,70.717 0.145,66.206 0.145,130.195 C0.145,194.184 36.216,192.079 36.216,192.079 L58.374,192.079 L58.374,161.963 C58.374,161.963 57.195,125.891 93.957,125.891 L155.824,125.891 C155.824,125.891 189.905,126.407 189.905,93.041 L189.905,33.977 C189.905,33.977 194.668,0.072 126.916,0.072 Z M92.802,19.659 C98.731,19.659 103.535,24.463 103.535,30.392 C103.535,36.321 98.731,41.125 92.802,41.125 C86.873,41.125 82.069,36.321 82.069,30.392 C82.069,24.463 86.873,19.659 92.802,19.659 Z" fill="url(#pythonBlue)"/>

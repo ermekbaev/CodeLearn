@@ -1,23 +1,26 @@
+// src/components/ProtectedRoute.tsx
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, requiredRoles }: { 
+  children: React.ReactNode, 
+  requiredRoles?: ('STUDENT' | 'INSTRUCTOR' | 'ADMIN')[] 
+}) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Если проверка аутентификации завершена и пользователь не авторизован
-    if (!loading && !user) {
-      router.push('/auth');
+    if (!loading) {
+      if (!user) {
+        router.push('/auth');
+      } else if (requiredRoles && !requiredRoles.includes(user.role)) {
+        router.push('/unauthorized');
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, requiredRoles]);
 
   if (loading) {
     return (
@@ -27,6 +30,5 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Если пользователь авторизован, показываем содержимое
   return user ? <>{children}</> : null;
 }

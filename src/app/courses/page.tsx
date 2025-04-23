@@ -37,9 +37,6 @@ export default function CoursesPage() {
         setLoading(true);
         // Получаем данные курсов с API
         const response = await axios.get('/api/courses');
-        console.log(response);
-        
-        
         
         // Здесь должен быть запрос для получения прогресса, если пользователь авторизован
         // const progressResponse = await axios.get('/api/progress');
@@ -122,8 +119,10 @@ export default function CoursesPage() {
     
     fetchCourses();
   }, []);
-  console.log(courses);
   
+  const handleFindCourses = () => {
+    router.push("/find-courses")
+  }
   
   const filteredCourses = () => {
     switch (filter) {
@@ -203,7 +202,7 @@ export default function CoursesPage() {
                     ? 'Начните своё обучение, выбрав один из наших популярных курсов программирования' 
                     : 'Попробуйте другие фильтры или вернитесь к просмотру всех курсов'}
                 </p>
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                <button onClick={handleFindCourses} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                   Найти курсы
                 </button>
               </div>

@@ -4,11 +4,11 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    // Исправление: ждем когда параметры будут доступны
-    const  id  = params.id;
+    // Деструктурируем id из context.params с использованием await
+    const { id } = await Promise.resolve(context.params);
 
     // Получаем данные курса по ID
     const course = await prisma.course.findUnique({

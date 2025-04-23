@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { signJwtToken } from '@/lib/auth';
+import { UserRole } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, avatar  } = await req.json();
     
     // Базовая валидация
     if (!name || !email || !password) {
@@ -35,7 +36,17 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        role: 'STUDENT' as keyof typeof UserRole,
+        avatar: avatar || null
+      },
+      select: {  
+        id: true,
+        name: true,
+        email: true,
+        role: true,  
+        password: true,  
+        avatar: true
       }
     });
     

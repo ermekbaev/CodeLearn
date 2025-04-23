@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,51 +7,153 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Основная модель пользователя
 model User {
-  id        String         @id @default(uuid())
-  email     String         @unique
+  id        String   @id @default(uuid())
+  email     String   @unique
   password  String
   name      String
-  createdAt DateTime       @default(now())
-  progress  UserProgress[]
+  avatar    String?
+  role      UserRole @default(STUDENT)
+  
+  // Даты
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  progress       UserProgress[]
+  loginAttempts  LoginAttempt[]
+  passwordResets PasswordResetToken[]
+  courses        UserCourseProgress[]
+  authoredCourses Course[]  
 }
 
+// Роли пользователей
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+// Курс
 model Course {
   id          String   @id @default(uuid())
   title       String
   description String
   language    String
+  difficulty  CourseDifficulty @default(BEGINNER)
+  
+  // Метаданные
   createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  authorId    String?  // Необязательная связь с инструктором
+
+  // Связи
   lessons     Lesson[]
+  userProgress UserCourseProgress[]
+  author      User?   @relation(fields: [authorId], references: [id])
 }
 
+// Уровень сложности курса
+enum CourseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// Урок
 model Lesson {
-  id          String         @id @default(uuid())
+  id          String   @id @default(uuid())
   courseId    String
   title       String
-  content     String         // Текст урока в формате markdown
+  content     String   // Markdown контент
   order       Int
-  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  // Метаданные
+  createdAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  // Связи
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   quizzes     Quiz[]
   userProgress UserProgress[]
 }
 
+// Квиз для урока
 model Quiz {
   id            String   @id @default(uuid())
   lessonId      String
   question      String
   options       String   // JSON массив строк
   correctAnswer String
+  hint          String?
+  explanation   String?
+  
+  // Связи
   lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 }
 
+// Прогресс пользователя по уроку
 model UserProgress {
   id        String   @id @default(uuid())
   userId    String
   lessonId  String
   completed Boolean  @default(false)
+  
+  // Метаданные
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-
+  
   @@unique([userId, lessonId])
+}
+
+// Прогресс пользователя по курсу
+model UserCourseProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  progress  Float    @default(0)  // Процент завершения курса
+  
+  // Метаданные
+  startedAt DateTime @default(now())
+  lastActivityAt DateTime @updatedAt
+
+  // Связи
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, courseId])
+}
+
+// Логирование попыток входа
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  userId    String?
+  email     String
+  success   Boolean
+  ipAddress String?
+  
+  // Метаданные
+  createdAt DateTime @default(now())
+
+  // Связи
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// Токены сброса пароля
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  
+  // Метаданные
+  createdAt DateTime @default(now())
+
+  // Связи
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

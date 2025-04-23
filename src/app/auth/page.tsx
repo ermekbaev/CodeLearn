@@ -10,8 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import AnimatedDiv from '../components/AnimatedDiv';
 
 export default function AuthPage() {
-  const router = useRouter();
-  const { login, register, loading, error, clearError } = useAuth();
+  const router = useRouter();//@ts-ignore
+  const { login, register, loading, error, } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
   
   
@@ -36,13 +36,11 @@ export default function AuthPage() {
   const handleLoginChange = (e:any) => {
     const { name, value } = e.target;
     setLoginForm({ ...loginForm, [name]: value });
-    clearError();
   };
   
   const handleRegisterChange = (e:any) => {
     const { name, value } = e.target;
     setRegisterForm({ ...registerForm, [name]: value });
-    clearError();
   };
   
   // Обработчик входа
