@@ -13,7 +13,7 @@ export { default as PageContainer } from './layout/PageContainer';
 
 // Course Components
 export { default as CourseCard } from './courses/CourseCard';
-export { default as LessonItem } from './courses/LessonItem';
+export { default as LessonItem } from './lessons/LessonItem';
 export { default as QuizOption } from './courses/QuizOption';
 
 // Profile Components

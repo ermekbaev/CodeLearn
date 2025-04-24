@@ -3,25 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { Layout } from 'lucide-react';
+
+// Компоненты
 import Header from '../components/Header';
 import CourseCard from '../components/courses/CourseCard';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AnimatedDiv from '../components/AnimatedDiv';
-import { Layout } from 'lucide-react';
+import CourseListHeader from '../components/courses/CourseListHeader';
+import CourseFilters from '../components/courses/CourseFilters';
+import EmptyCoursesState from '../components/courses/EmptyCoursesState';
+import CourseListSkeleton from '../components/courses/CourseListSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Определение типа для курса
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  language: string;
-  lessonsCount: number;
-  progress?: number;
-  image?: string;
-  rating?: number;
-  students?: number;
-}
+// Типы
+import { Course } from '@/types/courses';
 
 export default function CoursesPage() {
   const router = useRouter();
@@ -47,7 +43,7 @@ export default function CoursesPage() {
           console.error('Не удалось загрузить прогресс курсов', progressErr);
         }
         
-        const coursesWithProgress = response.data.map((course:Course) => {
+        const coursesWithProgress = response.data.map((course: Course) => {
           // Находим все завершенные уроки для данного курса по данным из API прогресса
           const completedLessons = progressData.filter((progress: { lesson: { courseId: string; }; completed: any; }) => {
             return progress.lesson && progress.lesson.courseId === course.id && progress.completed;
@@ -81,10 +77,9 @@ export default function CoursesPage() {
     fetchCourses();
   }, []);
   
-  
   const handleFindCourses = () => {
-    router.push("/find-courses")
-  }
+    router.push("/find-courses");
+  };
   
   const filteredCourses = () => {
     switch (filter) {
@@ -106,68 +101,30 @@ export default function CoursesPage() {
         
         <main className="flex-1">
           <div className="container mx-auto px-4 py-8">
-            <AnimatedDiv>
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl overflow-hidden mb-8">
-                <div className="p-8 md:p-12 text-white">
-                  <h1 className="text-3xl md:text-4xl font-bold mb-4">Добро пожаловать, {user?.name || 'пользователь'}!</h1>
-                  <p className="text-lg md:text-xl mb-6 opacity-90">Готовы продолжить обучение программированию?</p>
-                  <button className="bg-white text-indigo-600 px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition duration-300">
-                    Начать обучение
-                  </button>
-                </div>
-              </div>
-            </AnimatedDiv>
+            {/* Заголовок страницы */}
+            <CourseListHeader 
+              userName={user?.name || 'пользователь'}
+            />
             
+            {/* Фильтры курсов */}
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Ваши курсы</h2>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setFilter('all')}
-                  className={`${filter === 'all' ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'} px-4 py-2 rounded-lg transition-colors font-medium`}
-                >
-                  Все
-                </button>
-                <button 
-                  onClick={() => setFilter('inProgress')}
-                  className={`${filter === 'inProgress' ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'} px-4 py-2 rounded-lg transition-colors`}
-                >
-                  В процессе
-                </button>
-                <button 
-                  onClick={() => setFilter('completed')}
-                  className={`${filter === 'completed' ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'} px-4 py-2 rounded-lg transition-colors`}
-                >
-                  Завершенные
-                </button>
-              </div>
+              <CourseFilters activeFilter={filter} onFilterChange={setFilter} />
             </div>
             
+            {/* Контент */}
             {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-              </div>
+              <CourseListSkeleton count={3} />
             ) : error && courses.length === 0 ? (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
                 <h2 className="text-xl font-bold mb-2">Ошибка</h2>
                 <p>{error}</p>
               </div>
             ) : filteredCourses().length === 0 ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full mb-6">
-                  <Layout className="h-12 w-12 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {filter === 'all' ? 'У вас пока нет курсов' : 'Курсы не найдены'}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                  {filter === 'all' 
-                    ? 'Начните своё обучение, выбрав один из наших популярных курсов программирования' 
-                    : 'Попробуйте другие фильтры или вернитесь к просмотру всех курсов'}
-                </p>
-                <button onClick={handleFindCourses} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                  Найти курсы
-                </button>
-              </div>
+              <EmptyCoursesState 
+                filter={filter} 
+                onFindCourses={handleFindCourses} 
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredCourses().map((course, index) => (

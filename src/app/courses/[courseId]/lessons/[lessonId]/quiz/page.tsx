@@ -7,13 +7,20 @@ import {
   ArrowLeft, 
   LightbulbIcon, 
   CheckCircle, 
-  X, 
   ArrowRight,
   Award 
 } from 'lucide-react';
+
+// Импортируем компоненты
 import Header from '@/app/components/Header';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import AnimatedDiv from '@/app/components/AnimatedDiv';
+import Breadcrumbs from '@/app/components/layout/Breadcrumbs';
+import QuizOption from '@/app/components/courses/QuizOption';
+import Button from '@/app/components/ui/Button';
+import Loading from '@/app/components/ui/Loading';
+import Badge from '@/app/components/ui/Badge';
+import StatCard from '@/app/components/ui/StatCard';
 
 interface QuizData {
   id: string;
@@ -48,6 +55,28 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
   const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
   
+  // Отладочные логи
+  useEffect(() => {
+    if (quiz) {
+      console.log("Данные квиза:", {
+        question: quiz.question,
+        options: quiz.options,
+        correctAnswer: quiz.correctAnswer
+      });
+    }
+  }, [quiz]);
+  
+  useEffect(() => {
+    if (isSubmitted) {
+      console.log("Состояние после отправки:", {
+        selectedOption,
+        correctAnswer: quiz?.correctAnswer,
+        isCorrect
+      });
+    }
+  }, [isSubmitted, selectedOption, quiz?.correctAnswer, isCorrect]);
+  
+  // Загружаем данные при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -69,12 +98,14 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
       } catch (err) {
         console.error('Ошибка при загрузке данных:', err);
         setError('Не удалось загрузить данные теста. Пожалуйста, попробуйте позже.');
+        setLoading(false);
       }
     };
     
     fetchData();
   }, [courseId, lessonId]);
   
+  // Обработчик отправки ответа
   const handleSubmit = async () => {
     if (selectedOption === null) return;
     
@@ -85,15 +116,18 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
       });
       
       // Получаем результат
-      const { isCorrect, correctAnswer: answer } = response.data;
+      const { isCorrect: responseIsCorrect, correctAnswer: responseCorrectAnswer } = response.data;
       
-      setIsCorrect(isCorrect);
-      if (!isCorrect) {
-        setCorrectAnswer(answer);
+      // Устанавливаем состояние
+      setIsCorrect(responseIsCorrect);
+      
+      // Если ответ неправильный, запоминаем правильный ответ
+      if (!responseIsCorrect) {
+        setCorrectAnswer(responseCorrectAnswer);
       }
       
       // Отмечаем урок как пройденный, если ответ правильный
-      if (isCorrect) {
+      if (responseIsCorrect) {
         await axios.post('/api/progress', { 
           lessonId: lesson?.id, 
           completed: true 
@@ -108,13 +142,16 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
       // Для демонстрации без API
       const isAnswerCorrect = selectedOption === quiz?.correctAnswer;
       setIsCorrect(isAnswerCorrect);
+      
       if (!isAnswerCorrect) {
         setCorrectAnswer(quiz?.correctAnswer || null);
       }
+      
       setIsSubmitted(true);
     }
   };
   
+  // Обработчик навигации
   const handleNavigation = () => {
     if (isCorrect && lesson?.nextLessonId) {
       router.push(`/courses/${courseId}/lessons/${lesson.nextLessonId}`);
@@ -123,14 +160,25 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
     }
   };
   
+  // Формируем элементы хлебных крошек для навигации
+  const breadcrumbItems = [
+    {
+      label: 'К уроку',
+      href: `/courses/${courseId}/lessons/${lessonId}`,
+      icon: <ArrowLeft size={16} />
+    },
+    { label: course?.title || 'Курс', href: `/courses/${courseId}` },
+    { label: `Урок ${lesson?.order || ''}`, href: `/courses/${courseId}/lessons/${lessonId}` },
+    { label: 'Тест', active: true }
+  ];
+  
+  // Отображаем загрузку
   if (loading) {
     return (
       <ProtectedRoute>
         <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
           <Header />
-          <div className="flex flex-1 justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-          </div>
+          <Loading fullScreen text="Загрузка теста..." />
         </div>
       </ProtectedRoute>
     );
@@ -144,39 +192,28 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
         <main className="flex-1 overflow-auto">
           <div className="container mx-auto px-4 py-6">
             <AnimatedDiv>
-              <div className="flex items-center space-x-2 mb-6">
-                <button 
-                  onClick={() => router.push(`/courses/${courseId}/lessons/${lessonId}`)}
-                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center"
-                >
-                  <ArrowLeft size={18} className="mr-1" />
-                  К уроку
-                </button>
-                <span className="text-gray-400">/</span>
-                <span className="text-gray-700 dark:text-gray-300">{course?.title}</span>
-                <span className="text-gray-400">/</span>
-                <span className="text-gray-700 dark:text-gray-300">Урок {lesson?.order}</span>
-                <span className="text-gray-400">/</span>
-                <span className="text-gray-900 dark:text-white font-medium">Тест</span>
-              </div>
+              <Breadcrumbs items={breadcrumbItems} />
             </AnimatedDiv>
             
             {error && !quiz ? (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
                 <h2 className="text-xl font-bold mb-2">Ошибка</h2>
                 <p>{error}</p>
-                <button 
+                <Button 
+                  variant="outline"
+                  leftIcon={<ArrowLeft size={16} />}
                   onClick={() => router.push(`/courses/${courseId}/lessons/${lessonId}`)}
-                  className="mt-4 inline-flex items-center text-red-700 dark:text-red-300"
+                  className="mt-4"
                 >
-                  <ArrowLeft size={16} className="mr-2" />
                   Вернуться к уроку
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Основная секция */}
                 <div className="md:col-span-2">
                   <AnimatedDiv className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    {/* Заголовок квиза */}
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                       <div className="flex items-center mb-4">
                         <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg mr-4">
@@ -189,60 +226,27 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                       </div>
                     </div>
                     
+                    {/* Содержимое квиза */}
                     <div className="p-6">
                       <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">{quiz?.question}</h2>
                       
+                      {/* Варианты ответов с корректной передачей параметров */}
                       <div className="space-y-4">
                         {quiz?.options.map((option, index) => (
-                          <div 
+                          <QuizOption 
                             key={index}
-                            className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                              selectedOption === option 
-                                ? isSubmitted 
-                                ? isCorrect 
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600' 
-                                    : 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-600'
-                                  : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 dark:border-indigo-400' 
-                                : 'hover:border-gray-400 dark:hover:border-gray-500 border-gray-200 dark:border-gray-700'
-                            }`}
-                            onClick={() => !isSubmitted && setSelectedOption(option)}
-                          >
-                            <div className="flex items-center">
-                              <div className={`w-6 h-6 rounded-full border-2 ${
-                                selectedOption === option 
-                                  ? isSubmitted 
-                                    ? isCorrect 
-                                      ? 'border-green-500 bg-green-500 dark:border-green-600 dark:bg-green-600' 
-                                      : 'border-red-500 bg-red-500 dark:border-red-600 dark:bg-red-600'
-                                    : 'border-indigo-500 bg-indigo-500 dark:border-indigo-400 dark:bg-indigo-400' 
-                                  : 'border-gray-400 dark:border-gray-500'
-                              }  flex items-center justify-center mr-3`}>
-                                {selectedOption === option && (
-                                  isSubmitted ? (
-                                    isCorrect ? (
-                                      <CheckCircle className="w-4 h-4 text-white" />
-                                    ) : (
-                                      <X className="w-4 h-4 text-white" />
-                                    )
-                                  ) : (
-                                    <div className="w-3 h-3 bg-white rounded-full"></div>
-                                  )
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-800 dark:text-white">{option}</div>
-                                {isSubmitted && selectedOption === option && isCorrect && (
-                                  <div className="text-green-600 dark:text-green-400 text-sm mt-1">Правильный ответ!</div>
-                                )}
-                                {isSubmitted && selectedOption === option && !isCorrect && (
-                                  <div className="text-red-600 dark:text-red-400 text-sm mt-1">Неправильный ответ</div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+                            text={option}
+                            isSelected={selectedOption === option}
+                            isSubmitted={isSubmitted}
+                            userAnsweredCorrectly={isCorrect}
+                            isCorrectOption={option === quiz.correctAnswer}
+                            onClick={() => setSelectedOption(option)}
+                            className="mb-3"
+                          />
                         ))}
                       </div>
                       
+                      {/* Результат ответа */}
                       {isSubmitted ? (
                         <div className="mt-8">
                           {isCorrect ? (
@@ -260,54 +264,54 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                               </svg>
                               <div>
                                 <p className="font-bold">Упс, это неправильный ответ</p>
-                                <p>Правильный ответ: <span className="font-medium">{correctAnswer}</span>. Для объявления константы в JavaScript используется ключевое слово 'const'.</p>
+                                <p>Правильный ответ: <span className="font-medium">{correctAnswer}</span>.</p>
                               </div>
                             </div>
                           )}
                           
                           <div className="flex justify-between mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <button 
+                            <Button 
+                              variant="ghost"
+                              leftIcon={<ArrowLeft size={16} />}
                               onClick={() => router.push(`/courses/${courseId}/lessons/${lessonId}`)}
-                              className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
                             >
-                              <ArrowLeft size={16} className="mr-2" />
                               Вернуться к уроку
-                            </button>
+                            </Button>
                             
                             {isCorrect && (
-                              <button 
+                              <Button 
+                                variant="primary"
+                                gradient
+                                rightIcon={<ArrowRight size={16} />}
                                 onClick={handleNavigation}
-                                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 px-6 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center"
                               >
                                 Следующий урок
-                                <ArrowRight size={16} className="ml-2" />
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-8 flex space-x-4">
-                          <button 
-                            onClick={handleSubmit}
+                        <div className="mt-8 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                          <Button 
+                            variant="primary"
+                            gradient
+                            fullWidth
                             disabled={selectedOption === null}
-                            className={`flex-1 py-3 px-4 rounded-lg text-white transition-all ${
-                              selectedOption === null 
-                                ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' 
-                                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg'
-                            }`}
+                            onClick={handleSubmit}
                           >
                             Проверить ответ
-                          </button>
+                          </Button>
                           
-                          <button 
+                          <Button 
+                            variant="outline"
                             onClick={() => setShowHint(!showHint)}
-                            className="border-2 border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400 py-3 px-4 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900 transition-colors"
                           >
-                            Подсказка
-                          </button>
+                            {showHint ? 'Скрыть подсказку' : 'Подсказка'}
+                          </Button>
                         </div>
                       )}
                       
+                      {/* Подсказка */}
                       {showHint && !isSubmitted && quiz?.hint && (
                         <div className="mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg p-4">
                           <div className="font-medium mb-1">Подсказка:</div>
@@ -318,10 +322,12 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                   </AnimatedDiv>
                 </div>
                 
+                {/* Боковая панель */}
                 <div className="md:col-span-1">
                   <AnimatedDiv delay={200} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 sticky top-6">
                     <h3 className="font-semibold text-gray-800 dark:text-white mb-4">Ваш прогресс</h3>
                     
+                    {/* Визуализация прогресса */}
                     <div className="flex flex-col items-center mb-6">
                       <div className="w-24 h-24 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
                         25%
@@ -329,6 +335,7 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                       <span className="text-gray-700 dark:text-gray-300 text-sm">Курс завершен</span>
                     </div>
                     
+                    {/* Навигация по урокам */}
                     <div className="space-y-3">
                       <div className="flex items-center">
                         <CheckCircle size={18} className="text-green-500 mr-3" />
@@ -338,7 +345,7 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                         <div className="w-5 h-5 rounded-full border-2 border-indigo-500 flex items-center justify-center mr-3">
                           <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full"></div>
                         </div>
-                        <span className="text-gray-900 dark:text-white font-medium">Урок {lesson?.order} - {lesson?.title.substring(0, 15)}...</span>
+                        <span className="text-gray-900 dark:text-white font-medium">Урок {lesson?.order} - {lesson?.title?.substring(0, 15)}...</span>
                       </div>
                       <div className="flex items-center opacity-60">
                         <div className="w-5 h-5 rounded-full border-2 border-gray-400 mr-3"></div>
@@ -346,29 +353,37 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
                       </div>
                     </div>
                     
+                    {/* Статистика тестов */}
                     <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium text-gray-800 dark:text-white">Успехи в тестах</h4>
-                        <div className="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                          50%
-                        </div>
+                        <Badge variant="primary" size="sm">50%</Badge>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 text-center">
-                        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
-                          <div className="text-2xl font-bold text-gray-800 dark:text-white">1</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Попытка</div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600 dark:text-green-400">3/6</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Правильно</div>
-                        </div>
+                        <StatCard 
+                          value="1"
+                          label="Попытка"
+                          variant="neutral"
+                          icon={<span className="text-indigo-500">A</span>}
+                          className="p-2"
+                        />
+                        <StatCard 
+                          value="3/6"
+                          label="Правильно"
+                          variant="success"
+                          icon={<span className="text-green-500">✓</span>}
+                          className="p-2"
+                        />
                       </div>
                       
-                      <button className="mt-4 w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center">
-                        <Award size={16} className="mr-2 text-indigo-500" />
-                        <span>Посмотреть все достижения</span>
-                      </button>
+                      <Button 
+                        variant="ghost"
+                        leftIcon={<Award size={16} className="text-indigo-500" />}
+                        className="mt-4 w-full"
+                      >
+                        Посмотреть все достижения
+                      </Button>
                     </div>
                   </AnimatedDiv>
                 </div>
