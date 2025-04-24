@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import Card from '../ui/Card';
 
 interface ErrorDisplayProps {
   message: string;
@@ -15,7 +16,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   backLabel = 'Назад'
 }) => {
   return (
-    <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 rounded-lg">
+    <Card className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-6 shadow-none">
       <h2 className="text-xl font-bold mb-2">{title}</h2>
       <p>{message}</p>
       
@@ -28,7 +29,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
           {backLabel}
         </button>
       )}
-    </div>
+    </Card>
   );
 };
 

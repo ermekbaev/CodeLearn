@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, CheckSquare, ChevronRight } from 'lucide-react';
 import Badge from '../ui/Badge';
+import Card from '../ui/Card';
 
 interface LessonItemProps {
   id: string;
@@ -33,8 +34,10 @@ const LessonItem: React.FC<LessonItemProps> = ({
   };
   
   return (
-    <div 
-      className={`border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow overflow-hidden ${className}`}
+    <Card 
+      className={`border border-gray-200 dark:border-gray-700 ${className}`}
+      onClick={handleClick}
+      hover={true}
     >
       <div className="p-4 flex items-start">
         <div className="flex-shrink-0 mr-4">
@@ -79,7 +82,6 @@ const LessonItem: React.FC<LessonItemProps> = ({
           <div className="mt-3 flex justify-end">
             <button 
               className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium flex items-center"
-              onClick={handleClick}
             >
               {completed ? 'Повторить урок' : 'Начать урок'}
               <ChevronRight size={16} className="ml-1" />
@@ -87,7 +89,7 @@ const LessonItem: React.FC<LessonItemProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

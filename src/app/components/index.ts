@@ -14,7 +14,7 @@ export { default as PageContainer } from './layout/PageContainer';
 // Course Components
 export { default as CourseCard } from './courses/CourseCard';
 export { default as LessonItem } from './lessons/LessonItem';
-export { default as QuizOption } from './courses/QuizOption';
+export { default as QuizOption } from './quiz/QuizOption';
 
 // Profile Components
 export { default as AchievementCard } from './Profile/AchievmentCard';

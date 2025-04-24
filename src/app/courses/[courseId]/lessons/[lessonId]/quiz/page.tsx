@@ -16,7 +16,7 @@ import Header from '@/app/components/Header';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import AnimatedDiv from '@/app/components/AnimatedDiv';
 import Breadcrumbs from '@/app/components/layout/Breadcrumbs';
-import QuizOption from '@/app/components/courses/QuizOption';
+import QuizOption from '@/app/components/quiz/QuizOption';
 import Button from '@/app/components/ui/Button';
 import Loading from '@/app/components/ui/Loading';
 import Badge from '@/app/components/ui/Badge';

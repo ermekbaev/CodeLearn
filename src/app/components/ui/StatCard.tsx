@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import Card from './Card';
 
 type StatCardVariant = 'primary' | 'success' | 'warning' | 'danger' | 'purple' | 'neutral';
 
@@ -9,7 +10,6 @@ interface StatCardProps {
   variant?: StatCardVariant;
   className?: string;
 }
-
 
 const StatCard: React.FC<StatCardProps> = ({
   value,
@@ -54,7 +54,7 @@ const StatCard: React.FC<StatCardProps> = ({
   const { bg, iconBg, iconColor } = variantClasses[variant];
   
   return (
-    <div className={`${bg} p-4 rounded-xl ${className}`}>
+    <Card className={`${bg} p-4 ${className}`}>
       <div className="flex items-center">
         <div className={`${iconBg} p-3 rounded-lg mr-4`}>
           <div className={`h-6 w-6 ${iconColor}`}>
@@ -66,7 +66,7 @@ const StatCard: React.FC<StatCardProps> = ({
           <p className="text-gray-600 dark:text-gray-400 text-sm">{label}</p>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 
